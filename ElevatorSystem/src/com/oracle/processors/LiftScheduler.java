@@ -3,13 +3,19 @@ package com.oracle.processors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.oracle.LiftSystem;
 import com.oracle.elevator.constants.LiftConstant;
 import com.oracle.elevator.models.Lift;
+import com.oracle.exceptions.RequestRejectionException;
 import com.oracle.requests.Request;
 import com.oracle.strategy.SchedulingStrategy;
 
 public class LiftScheduler {
+	
+	Logger logger= LoggerFactory.getLogger(LiftScheduler.class);
 	
 	static LiftScheduler liftScheduler;
 	
@@ -35,14 +41,19 @@ public class LiftScheduler {
 		return availableLifts;
 	}
 	
-	public String submitRequest(Request request){
+	public String submitRequest(Request request) {
 		if(!validateRequest(request)){
 			return LiftConstant.REQUEST_REJECTED.toString();
 		}
 //		Lift lift= getNextLift();
 		Lift lift= schedulingStrategy.getNextLift(availableLifts);
-		String response= lift.addRequest(request);
-		if(LiftConstant.REQUEST_REJECTED.toString().equals(response)){
+		String response = null;
+		try {
+			response = lift.addRequest(request);
+		} catch (RequestRejectionException e) {
+			logger.info("Request is Rejected.");
+		}
+		if(response==null || LiftConstant.REQUEST_REJECTED.toString().equals(response)){
 			schedulingStrategy.updateLiftSequenceForRequestFailure();
 			//liftTakenLastTask=liftTakenLastTask-1;
 		}
