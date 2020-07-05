@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.oracle.LiftSystem;
 import com.oracle.elevator.request.handlers.LiftRequestHandler;
+import com.oracle.exceptions.RequestRejectionException;
 import com.oracle.requests.Request;
 
 /**
@@ -103,7 +105,11 @@ public class Lift extends Thread{
 	}
 
 	
-	public String addRequest(Request request) {
+	public String addRequest(Request request) throws RequestRejectionException {
+		if(LiftSystem.isShutdownRequested){
+			logger.info("Request can not be accepted, as lift system is request for shutdown.");
+			throw new RequestRejectionException("New Request can not be accepted.");
+		}
 		logger.info("User Request: "+request.toString());
 		return liftRequestHandler.addRequst(this, request);
 	}		
